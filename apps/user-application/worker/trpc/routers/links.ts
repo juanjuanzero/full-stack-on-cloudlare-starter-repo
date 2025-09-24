@@ -38,7 +38,7 @@ export const linksTrpcRoutes = t.router({
     )
     .mutation(async ({ input }) => {
       console.log(input.linkId, input.name);
-      return await updateLinkName(input.linkId, input.name);
+      await updateLinkName(input.linkId, input.name);
     }),
   getLink: t.procedure
     .input(
@@ -60,7 +60,7 @@ export const linksTrpcRoutes = t.router({
     )
     .mutation(async ({ input }) => {
       console.log(input.linkId, input.destinations);
-      return await updateLinkDestinations(input.linkId, input.destinations);
+      await updateLinkDestinations(input.linkId, input.destinations);
     }),
   activeLinks: t.procedure.query(async () => {
     return ACTIVE_LINKS_LAST_HOUR;
