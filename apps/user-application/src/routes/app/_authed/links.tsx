@@ -81,7 +81,7 @@ function RouteComponent() {
       header: "Destination Links",
       cell: (info) => {
         const value = info.getValue();
-        return typeof value === "string" ? value : JSON.stringify(value);
+        return Object.keys(value).length;
       },
     }),
   ];
