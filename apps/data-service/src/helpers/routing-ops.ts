@@ -1,4 +1,5 @@
-import { LinkSchemaType } from "@repo/data-ops/zod-schema/links";
+import { getLink } from "@repo/data-ops/queries/links";
+import { linkSchema, LinkSchemaType } from "@repo/data-ops/zod-schema/links";
 
 export function getDestinationForCountry(linkInfo: LinkSchemaType, countryCode?: string) {
 	if (!countryCode) {
@@ -14,3 +15,38 @@ export function getDestinationForCountry(linkInfo: LinkSchemaType, countryCode?:
 	return linkInfo.destinations.default;
 }
 
+export function getLinkInfoFromKV(env: Env, linkId: string) {
+    const linkInfo = env.CACHE.get(linkId, { type: "json" }) as Promise<LinkSchemaType | null>;
+    if (!linkInfo) {
+        return null;
+    }
+    try {
+        const parsed = linkSchema.parse(linkInfo);  
+        return parsed;
+    } catch (error) {
+        console.error("Error parsing link info from KV:", error);
+        return null;
+    }
+}
+
+export async function getRoutingDestinations(env: Env, id: string) {
+    const linkInfo = await getLinkInfoFromKV(env, id);
+    if (linkInfo) {
+        return linkInfo;
+    }
+    const linkInfoFromDb = await getLink(id);
+    if (!linkInfoFromDb) {
+        return null;
+    }
+    await saveLinkInfoToKV(env, id, linkInfoFromDb);
+    return linkInfoFromDb;
+}
+
+const TTL_TIME = 300; // 5 minutes
+async function saveLinkInfoToKV(env: Env, linkId: string, linkInfo: LinkSchemaType) {
+    try {
+        await env.CACHE.put(linkId, JSON.stringify(linkInfo), { expirationTtl: TTL_TIME});
+    } catch (error) {
+        console.error("Error saving link info to KV:", error);
+    }
+}
