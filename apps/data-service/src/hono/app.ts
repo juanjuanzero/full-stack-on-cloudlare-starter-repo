@@ -19,7 +19,17 @@ App.get('/:id', async (c) => {
     }
 
     const headers = cfHeaders.data;
-    const destinations = getDestinationForCountry(linkInfoFromDb, headers.country);
-    return c.redirect(destinations
-    ) 
+    const destination = getDestinationForCountry(linkInfoFromDb, headers.country);
+    const queueMessage : LinkClickQueueMessage = {
+        data: {
+            id: id,
+            country: headers.country,
+            destination: destination,
+            accountId: linkInfoFromDb.accountId,
+            latitude: headers.latitude,
+            longitude: headers.longitude,
+            timestamp: new Date().toISOString(),
+        }}
+    c.executionCtx.waitUntil(c.env.QUEUE.send(queueMessage));
+    return c.redirect(destination) 
 })
