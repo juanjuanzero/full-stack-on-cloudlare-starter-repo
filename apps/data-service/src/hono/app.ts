@@ -1,6 +1,7 @@
 import { getDestinationForCountry, getRoutingDestinations } from "@/helpers/routing-ops";
 import { getLink } from "@repo/data-ops/queries/links";
 import { cloudflareInfoSchema } from "@repo/data-ops/zod-schema/links";
+import { LinkClickMessageType } from "@repo/data-ops/zod-schema/queue";
 import {Hono} from "hono";
 
 export const App = new Hono<{ Bindings: Env }>();
@@ -20,7 +21,8 @@ App.get('/:id', async (c) => {
 
     const headers = cfHeaders.data;
     const destination = getDestinationForCountry(linkInfoFromDb, headers.country);
-    const queueMessage : LinkClickQueueMessage = {
+    const queueMessage : LinkClickMessageType = {
+        type: "LINK_CLICK",
         data: {
             id: id,
             country: headers.country,
